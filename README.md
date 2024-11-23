@@ -1,8 +1,10 @@
-# IncreLM
+# IncreLM: Incremental 3D Line Mapping
 
 Official implementation of paper "IncreLM: Incremental 3D Line Mapping" at BMVC 2024.
 
 The code and a detailed README file will be available shortly.
+
+## Method
 
 <p align="center">
 <img width=100% src="./misc/media/pipeline.png">
