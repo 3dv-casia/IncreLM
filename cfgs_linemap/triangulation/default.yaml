@@ -1,0 +1,229 @@
+---
+##############################
+# global config
+cfg_type: "triangulation"
+weight_path: "~/.limap/models"
+load_meta: false    # load neighbors and ranges, sfm info
+load_det: false     # load line detection results
+load_vpdet: false   # load VP detection results
+load_match: false   # load line matching results
+load_undistort: False 
+use_tmp: False
+n_visible_views: 4
+n_neighbors: 20 
+use_cuda: True
+visualize: False
+max_image_dim: 1600
+skip_exists: False
+output_dir: null
+output_folder: "finaltracks"
+load_dir: null
+n_jobs: -1 # for undistortion
+undistortion_output_dir: "undistorted_images"
+
+##############################
+# sfm config
+sfm:
+    colmap_output_path: "colmap_outputs"
+    reuse: False
+    min_triangulation_angle: 1.0  # the allowed min_triangulation_angle for neighbor image
+    neighbor_type: "dice" # ["overlap", "iou", "dice"]
+    ranges:
+        range_robust: [0.05, 0.95] # [0.05, 0.95]  # [kMinPercentile, kMaxPercentile]
+        k_stretch: 1.25
+    hloc:
+        descriptor: "superpoint_aachen"  # sift
+        matcher: "superpoint+lightglue"  # superpoint+lightglue, NN-superpoint, NN-ratio
+
+##############################
+# line detection and matching config
+line2d:
+    max_num_2d_segs: 3000
+    do_merge_lines: False
+    visualize: False          # output detected 2D line segments image
+    save_l3dpp: False         # save lines in l3dpp format
+    save_l3dpp_matches: False # save line matches in l3dpp format
+    compute_descinfo: true
+    detector: 
+        method: "deeplsd"   # ["lsd", "sold2", "hawpv3", "tp_lsd", "deeplsd"]
+        skip_exists: False
+    extractor: 
+        method: "wireframe" # ["sold2", "lbd", "l2d2", "linetr", "superpoint_endpoints", "wireframe"]
+        skip_exists: False
+    matcher:
+        method: "gluestick" # ["sold2", "lbd", "l2d2", "linetr", "nn_endpoints", "superglue_endpoints", "gluestick"]
+        n_jobs: 1
+        topk: 10            # only hold topk matches
+        skip_exists: False
+        superglue:
+            weights: "outdoor" # ["indoor", "outdoor"] for selecting superglue models
+var2d: # in pixels
+    sold2: 5.0
+    lsd: 2.0
+    hawpv3: 5.0
+    tp_lsd: 5.0
+    deeplsd: 4.0
+
+##############################
+# triangulation config
+triangulation:
+    # base
+    only_execute_pre_processing: false
+    debug_mode: false
+    add_halfpix: false
+    min_length_2d: 0.0    # in pixels
+    var2d: -1.0           # depending on the detector
+    max_num_one_to_many_matches: 10
+    output_submaps: false
+    output_submaps_frequency: 300
+    match_lines_by_epipolar_IoU: false
+    th_IoU: 0.1
+
+    # construct graph
+    use_range_filter: true
+    use_vp: true
+    vpdet_config:
+        method: "jlinkage"
+        n_jobs: 32
+        min_length: 20
+    use_pointsfm: true
+    pointsfm_config:
+        colmap_folder: null
+        reuse_sfminfos_colmap: true
+        use_neighbors: true 
+    line_tri_angle_threshold: 2.0   # for statistics
+    use_line_line_solver: true
+    ransac:
+        use_two_points_solver: true
+        use_point_vp_solver: true
+        random: false
+        cheirality_min_depth: 0.0
+        th_angle: 5.0  # reprojection test
+        th_perp: 2.0   # reprojection test
+        min_num_iterations: 100
+        inlier_si_dist_th: 1.0
+        inlier_angle_th: 5.0
+        weight_point: 1.0
+        weight_direction: 1.0
+    construct_3D_line_edges_linker2d_config:
+        score_th: 0.5
+        th_angle: 5.0
+        th_perp: 2.0
+        th_overlap: 0.0
+    construct_3D_line_edges_linker3d_config:
+        score_th: 0.5
+        th_angle: 5.0
+        th_overlap: 0.0
+        th_innerseg: 1.0
+    use_unshared_points: false
+    max_point_line_reproject_distance: 1.0
+
+    # find the best node
+    use_fast_find_max_version: true
+    min_score: 1.0
+
+    # extend tracks
+    num_outliers_aggregator_for_line_track_extension: 2
+    extend_track_sensitivity_threshold: 50.0
+    require_tri_node: false
+    test_tri_node: false
+    extend_tracks_linker2d_config:
+        score_th: 0.5
+        th_angle: 5.0
+        th_perp: 2.0
+        th_overlap: 0.5
+    extend_tracks_linker3d_config:
+        score_th: 0.5
+        th_angle: 8.0
+        th_overlap: 0.0
+        th_innerseg: 2.0
+    use_collinearity2D: false
+
+    # merge tracks
+    enable_merging: true
+    num_outliers_aggregator_for_line_track_merging: 2
+    merge_tracks_linker2d_config:
+        th_angle: 5.0
+        th_perp: 2.0
+    merge_tracks_linker3d_config:
+        score_th: 0.5
+        th_angle: 2.5
+        th_overlap: 0.0
+        th_innerseg: 0.75
+
+    # filter tracks
+    enable_filtering: true
+    num_outliers_aggregator_for_reprojection_filtering: 2
+    min_support_images: 3
+    filter_incontinuous_line3d: true
+    filtering_sensitivity_threshold: 90.0
+    th_depth: 1.0e-12
+    th_sv_angular_3d: 75.0
+    th_sv_num_supports: 3
+    th_overlap: 0.5
+    th_overlap_num_supports: 3
+    filter_by_reprojection_linker2d_config:
+        score_th: 0.5
+        th_angle: 5.0
+        th_perp: 2.0
+        th_overlap: 0.9
+
+
+global_pl_association:
+    enable: true
+
+    max_num_iterations: 50
+    num_outliers_aggregator: 2
+
+    use_vp: true
+    use_pointsfm: true
+    print_summary: True 
+    constant_intrinsics: True 
+    constant_principal_point: True
+    constant_pose: True
+    constant_point: False
+    constant_line: False
+    constant_vp: False
+
+    # vpdetection
+    vpdet:
+        method: "jlinkage"
+        n_jobs: 32
+        min_length: 20
+
+    # geometric loss
+    lw_point: 0.1
+    geometric_alpha: 10.0
+
+    # junction reassociation
+    th_count_lineline: 3
+    th_angle_lineline: 30.0
+
+    # point-line association
+    lw_pointline_association: 10.0 # the global loss weight
+    th_pixel_sigma: 2.0 # in pixels
+    th_weight_pointline: 3.0
+
+    # vp-line association
+    lw_vpline_association: 1.0
+    th_count_vpline: 3
+
+    # vp orthogonality
+    lw_vp_orthogonality: 1.0
+    th_angle_orthogonality: 87.0
+
+    # vp collinearity
+    lw_vp_collinearity: 0.0
+    th_angle_collinearity: 1.0
+
+    # hard association for output
+    th_hard_pl_dist3d: 2.0
+
+
+##############################
+# structures config
+structures:
+    bpt2d:
+        threshold_keypoints: 2.0
+        threshold_intersection: 2.0
+        threshold_merge_junctions: 2.0
