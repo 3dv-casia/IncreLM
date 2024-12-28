@@ -273,17 +273,6 @@ namespace limap
     //////////////////////////////////////////////////////////////////////////////////////////
     // auxiliary information
     //////////////////////////////////////////////////////////////////////////////////////////
-    // may only have line3d_list
-    // if (str == "line3d_list")
-    // {
-    //   for (size_t i = 0; i < n_lines; ++i)
-    //   {
-    //     Line3d &line3d = line3d_list[i];
-    //     file >> line3d.start[0] >> line3d.start[1] >> line3d.start[2];
-    //     file >> line3d.end[0] >> line3d.end[1] >> line3d.end[2];
-    //   }
-    //   return;
-    // }
     // row6: node_id_list
     THROW_CHECK_EQ(str, "node_id_list");
     for (size_t i = 0; i < n_lines; ++i)
