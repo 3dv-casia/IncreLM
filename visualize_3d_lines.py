@@ -46,6 +46,12 @@ def main(args):
     if args.n_visible_views > 2 and linetracks is None:
         raise ValueError("Error! Track information is not available.")
     if args.imagecols is None:
+        if linetracks is not None:
+            lines = []  # reset
+            for track in linetracks:
+                if track.count_images() < args.n_visible_views:
+                    continue
+                lines.append(track.line)
         vis_3d_lines(lines, mode=args.mode, ranges=ranges, scale=args.scale)
     else:
         if (not os.path.exists(args.imagecols)) or (not args.imagecols.endswith('.npy')):
