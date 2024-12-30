@@ -19,7 +19,7 @@ The following script is an example of a conda environment setup.
 
 ```bash
 # 1. Install COLMAP 3.8
-#  * Guide: https://colmap.github.io/install.html. (make sure to use the tag 3.8)
+#  * Guide: https://colmap.github.io/install.html (make sure to use the tag 3.8)
 
 # 2. Install PoseLib.
 #  * Guide: misc/install/poselib.md
@@ -105,7 +105,7 @@ bash experiments/run_hypersim.sh ${hypersim_data_dir} ${hypersim_output_dir}
 ```
 - We test [LSD](https://github.com/iago-suarez/pytlsd) lines and [DeepLSD](https://github.com/cvg/DeepLSD) lines, equipped with the [GlueStick](https://github.com/cvg/GlueStick) line matcher (Top 10 matching). 
 
-- Evaluation results for final line maps are reported in `${hypersim_output_dir}/lsd/eval_log_nv_4.txt` and `${hypersim_output_dir}/deeplsd/eval_log_nv_4.txt`.
+- The evaluation results of the final line maps on the LSD line detector and the DeepLSD line detector are saved in `${hypersim_output_dir}/lsd/eval_log_nv_4.txt` and `${hypersim_output_dir}/deeplsd/eval_log_nv_4.txt`, respectively.
 
 ## Evaluation on *Tanks and Temples* dataset
 
@@ -173,7 +173,7 @@ bash experiments/run_tnt.sh ${tnt_output_dir} ${tnt_data_dir}/meta_train ${tnt_c
 ```
 - We test [LSD](https://github.com/iago-suarez/pytlsd) lines and [DeepLSD](https://github.com/cvg/DeepLSD) lines, equipped with the [GlueStick](https://github.com/cvg/GlueStick) line matcher (Top 10 matching). 
 
-- Evaluation results for final line maps are reported in `${tnt_output_dir}/lsd/eval_log_nv_4.txt` and `${tnt_output_dir}/deeplsd/eval_log_nv_4.txt`.
+- The evaluation results of the final line maps on the LSD line detector and the DeepLSD line detector are saved in `${tnt_output_dir}/lsd/eval_log_nv_4.txt` and `${tnt_output_dir}/deeplsd/eval_log_nv_4.txt`, respectively.
 
 ## Possible issues
 ### 'GLIBCXX_3.4.30' not found
