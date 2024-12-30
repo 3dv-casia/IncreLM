@@ -40,10 +40,10 @@ sfm:
 line2d:
     max_num_2d_segs: 3000
     do_merge_lines: False
-    visualize: False          # output detected 2D line segments image
+    visualize: True           # output detected 2D line segments image
     save_l3dpp: False         # save lines in l3dpp format
     save_l3dpp_matches: False # save line matches in l3dpp format
-    compute_descinfo: true
+    compute_descinfo: False
     detector: 
         method: "deeplsd"   # ["lsd", "sold2", "hawpv3", "tp_lsd", "deeplsd"]
         skip_exists: False
