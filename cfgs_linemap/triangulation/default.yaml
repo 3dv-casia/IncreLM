@@ -155,7 +155,7 @@ triangulation:
     enable_filtering: true
     num_outliers_aggregator_for_reprojection_filtering: 2
     min_support_images: 3
-    filter_incontinuous_line3d: true
+    filter_incontinuous_line3d: false
     filtering_sensitivity_threshold: 90.0
     th_depth: 1.0e-12
     th_sv_angular_3d: 75.0
