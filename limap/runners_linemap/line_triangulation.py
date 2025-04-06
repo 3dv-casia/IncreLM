@@ -194,6 +194,7 @@ def line_triangulation(cfg, imagecols, neighbors=None, ranges=None, colmap_model
     # config hybrid ransac
     hybrid_ransac_options = _linemap.HybridLineTriangulationEstimatorOptions()
     ransac_cfg = cfg["triangulation"]["ransac"]
+    hybrid_ransac_options.ransac_options.success_probability_ = 0.99
     hybrid_ransac_options.ransac_options.min_num_iterations_ = ransac_cfg["min_num_iterations"]
     hybrid_ransac_options.ransac_options.squared_inlier_thresholds_ = [ransac_cfg["inlier_si_dist_th"] * ransac_cfg["inlier_si_dist_th"],
                                                                        ransac_cfg["inlier_angle_th"] * ransac_cfg["inlier_angle_th"]]

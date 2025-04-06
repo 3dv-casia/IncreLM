@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "linemap/util/misc.h"
 #include "linemap/util/types.h"
 
 #include <algorithm>
@@ -123,6 +124,44 @@ class LineTriangulationHybridRansac : public HybridRansacBase {
       }
     }
 
+    if (VERBOSE) {
+      std::vector<std::vector<int>> inliers_tmp;
+      int all_num_inliers =
+          GetInliers(solver, *best_model, options.squared_inlier_thresholds_,
+                     &inliers_tmp);
+      std::vector<double> inlier_ratios_tmp(2);
+      std::vector<int> num_data_tmp;
+      solver.num_data(&num_data_tmp);
+      inlier_ratios_tmp[0] = static_cast<double>(inliers_tmp[0].size()) /
+                             static_cast<double>(num_data_tmp[0]);
+      inlier_ratios_tmp[1] = static_cast<double>(inliers_tmp[1].size()) /
+                             static_cast<double>(num_data_tmp[1]);
+      std::cout << "init_valid = " << init_valid << std::endl;
+      std::cout << "line-line model score = " << best_min_model_score
+                << "  solver.CheckModel(model) = "
+                << solver.CheckModel(*best_model)
+                << "  current inlier ratio = " << inlier_ratios_tmp[0] << " "
+                << inlier_ratios_tmp[1];
+      std::cout << "  num data = " << num_data_tmp[0] << " " << num_data_tmp[1]
+                << std::endl;
+      std::cout << "update best model = "
+                << (best_min_model_score < std::numeric_limits<double>::max())
+                << "  best model score = " << stats.best_model_score
+                << "  best solver type = " << stats.best_solver_type
+                << "  best inlier ratios = " << stats.inlier_ratios[0] << " "
+                << stats.inlier_ratios[1] << std::endl;
+      std::cout << "dynamic max_num_iterations_per_solver[0] = "
+                << max_num_iterations_per_solver[0]
+                << "  dynamic max_num_iterations_per_solver[1] = "
+                << max_num_iterations_per_solver[1] << std::endl;
+      std::cout << "stats.num_iterations_per_solver[0] = "
+                << stats.num_iterations_per_solver[0]
+                << "  stats.num_iterations_per_solver[1] = "
+                << stats.num_iterations_per_solver[1] << std::endl;
+      std::cout << "max_num_iterations = " << max_num_iterations << std::endl;
+      std::cout << std::endl;
+    }
+
     if (!VerifyData(min_sample_sizes, num_data, kNumSolvers, kNumDataTypes,
                     &prior_probabilities)) {
       if (init_valid) {  // if the initial best model is valid
@@ -144,6 +183,11 @@ class LineTriangulationHybridRansac : public HybridRansacBase {
     for (stats.num_iterations_total = 0u;
          stats.num_iterations_total < max_num_iterations;
          ++stats.num_iterations_total) {
+      if (VERBOSE) {
+        PrintHeading2("RANSAC report");
+        std::cout << "iter = " << stats.num_iterations_total << std::endl;
+      }
+
       const int kSolverType =
           SelectMinimalSolver(solver, prior_probabilities, stats,
                               options.min_num_iterations_, &rng);
@@ -162,6 +206,8 @@ class LineTriangulationHybridRansac : public HybridRansacBase {
       const int kNumEstimatedModels =
           solver.MinimalSolver(minimal_sample, kSolverType, &estimated_models);
 
+      bool update_best_mode = false;
+      double current_model_score = -1.0;  // invalid
       if (kNumEstimatedModels > 0) {
         // Finds the best model among all estimated models.
         double best_local_score = std::numeric_limits<double>::max();
@@ -170,9 +216,11 @@ class LineTriangulationHybridRansac : public HybridRansacBase {
                                 kNumEstimatedModels, kSqrInlierThresh,
                                 kNumDataTypes, num_data, &best_local_score,
                                 &best_local_model_id);
+        current_model_score = best_local_score;
 
         // Updates the best model found so far.
         if (best_local_score < best_min_model_score) {
+          update_best_mode = true;
           // New best model (estimated from inliers found.
           best_min_model_score = best_local_score;
           best_minimal_model = estimated_models[best_local_model_id];
@@ -181,6 +229,7 @@ class LineTriangulationHybridRansac : public HybridRansacBase {
           UpdateBestModel(best_min_model_score, best_minimal_model, kSolverType,
                           &(stats.best_model_score), best_model,
                           &(stats.best_solver_type));
+          THROW_CHECK_EQ(best_min_model_score, stats.best_model_score);
 
           // Updates the number of RANSAC iterations for each solver as well
           // as the number of inliers and inlier ratios for each data type.
@@ -189,6 +238,51 @@ class LineTriangulationHybridRansac : public HybridRansacBase {
                                           &max_num_iterations_per_solver);
         } else {
         }
+      }
+
+      if (VERBOSE) {
+        std::vector<std::vector<int>> inliers_tmp;
+        int all_num_inliers =
+            GetInliers(solver, estimated_models[0],
+                       options.squared_inlier_thresholds_, &inliers_tmp);
+        std::vector<double> inlier_ratios_tmp(2);
+        std::vector<int> num_data_tmp;
+        solver.num_data(&num_data_tmp);
+        inlier_ratios_tmp[0] = static_cast<double>(inliers_tmp[0].size()) /
+                               static_cast<double>(num_data_tmp[0]);
+        inlier_ratios_tmp[1] = static_cast<double>(inliers_tmp[1].size()) /
+                               static_cast<double>(num_data_tmp[1]);
+        std::cout << "current solver type = " << kSolverType
+                  << "  current model score = " << current_model_score
+                  << "  solver.CheckModel(model) = "
+                  << solver.CheckModel(estimated_models[0])
+                  << "  current inlier ratio = " << inlier_ratios_tmp[0] << " "
+                  << inlier_ratios_tmp[1];
+        if (kSolverType == 0) {
+          std::cout << "  sample = " << minimal_sample[0][0] << " "
+                    << minimal_sample[0][1];
+        }
+        if (kSolverType == 1) {
+          std::cout << "  sample = " << minimal_sample[0][0] << " "
+                    << minimal_sample[1][0];
+        }
+        std::cout << "  num data = " << num_data_tmp[0] << " "
+                  << num_data_tmp[1] << std::endl;
+        std::cout << "update best model = " << update_best_mode
+                  << "  best model score = " << stats.best_model_score
+                  << "  best solver type = " << stats.best_solver_type
+                  << "  best inlier ratios = " << stats.inlier_ratios[0] << " "
+                  << stats.inlier_ratios[1] << std::endl;
+        std::cout << "dynamic max_num_iterations_per_solver[0] = "
+                  << max_num_iterations_per_solver[0]
+                  << "  dynamic max_num_iterations_per_solver[1] = "
+                  << max_num_iterations_per_solver[1] << std::endl;
+        std::cout << "stats.num_iterations_per_solver[0] = "
+                  << stats.num_iterations_per_solver[0]
+                  << "  stats.num_iterations_per_solver[1] = "
+                  << stats.num_iterations_per_solver[1] << std::endl;
+        std::cout << "max_num_iterations = " << max_num_iterations << std::endl;
+        std::cout << std::endl;
       }
 
       // Terminate if the current solver reaches its maximum number of
@@ -228,11 +322,29 @@ class LineTriangulationHybridRansac : public HybridRansacBase {
       }
     } else {
       for (int i = 0; i < kNumSolvers; ++i) {
+        // double num_iters =
+        //     static_cast<double>(stats.num_iterations_per_solver[i]);
+        // if (num_iters > 0.0) {
+        //   num_iters -= 1.0;
+        // }
+
+        // double all_inlier_prob = 1.0;
+        // for (int j = 0; j < kNumDataTypes; ++j) {
+        //   all_inlier_prob *=
+        //       std::pow(stats.inlier_ratios[j],
+        //                static_cast<double>(min_sample_sizes[i][j]));
+        // }
+
+        // if (num_iters < static_cast<double>(min_num_iterations)) {
+        //   probabilities[i] = all_inlier_prob * prior_probabilities[i];
+        // } else {
+        //   probabilities[i] = all_inlier_prob *
+        //                      std::pow(1.0 - all_inlier_prob, num_iters) *
+        //                      prior_probabilities[i];
+        // }
+
         double num_iters =
-            static_cast<double>(stats.num_iterations_per_solver[i]);
-        if (num_iters > 0.0) {
-          num_iters -= 1.0;
-        }
+            static_cast<double>(stats.num_iterations_per_solver[i]);  // >= 0
 
         double all_inlier_prob = 1.0;
         for (int j = 0; j < kNumDataTypes; ++j) {
@@ -240,16 +352,21 @@ class LineTriangulationHybridRansac : public HybridRansacBase {
               std::pow(stats.inlier_ratios[j],
                        static_cast<double>(min_sample_sizes[i][j]));
         }
-
-        if (num_iters < static_cast<double>(min_num_iterations)) {
-          probabilities[i] = all_inlier_prob * prior_probabilities[i];
-        } else {
-          probabilities[i] = all_inlier_prob *
-                             std::pow(1.0 - all_inlier_prob, num_iters) *
-                             prior_probabilities[i];
-        }
+        probabilities[i] = all_inlier_prob *
+                           std::pow(1.0 - all_inlier_prob, num_iters) *
+                           prior_probabilities[i];
         sum_probabilities += probabilities[i];
       }
+    }
+
+    if (VERBOSE) {
+      std::cout << "probabilities[0] = " << probabilities[0]
+                << "  probabilities[1] = " << probabilities[1] << std::endl;
+      std::cout << "prior_probabilities[0] = " << prior_probabilities[0]
+                << "  prior_probabilities[1] = " << prior_probabilities[1]
+                << std::endl;
+      std::cout << "probabilities.size() = " << probabilities.size()
+                << std::endl;
     }
 
     std::uniform_real_distribution<double> dist(0.0, sum_probabilities);

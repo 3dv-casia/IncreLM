@@ -52,4 +52,8 @@ void PrintVarDetailsDebug(const char* file_name, const int line_no,
 #define PRINT_VAR_MSG(var, msg) \
   PrintVarDetailsDebug(__FILE__, __LINE__, #var, var, msg);
 
+#ifndef VERBOSE
+#define VERBOSE 0
+#endif
+
 }  // namespace limap

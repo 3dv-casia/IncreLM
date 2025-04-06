@@ -33,6 +33,7 @@ class HybridLineTriangulationEstimatorOptions {
   double th_perp = 2.0;   // in pixles
 
   void Print() const {
+    PRINT_VAR(ransac_options.success_probability_);
     PRINT_VAR(ransac_options.data_type_weights_.size());
     PRINT_VAR(ransac_options.data_type_weights_[0]);
     PRINT_VAR(ransac_options.data_type_weights_[1]);
@@ -86,6 +87,23 @@ class LineTriangulationEstimator {
     (*num_data)[1] = num_directions_;
   }
 
+  // void solver_probabilities(std::vector<double>* solver_probabilities) const
+  // {
+  //   std::vector<std::vector<int>> sample_sizes;
+  //   min_sample_sizes(&sample_sizes);
+  //   solver_probabilities->resize(2);
+
+  //   for (int i = 0; i < 2; i++) {
+  //     if (!solver_flags_[i])
+  //       solver_probabilities->at(i) = 0.0;
+  //     else {
+  //       solver_probabilities->at(i) =
+  //           combination(num_points_, sample_sizes[i][0]) *
+  //           combination(num_directions_, sample_sizes[i][1]);
+  //     }
+  //   }
+  // }
+
   void solver_probabilities(std::vector<double>* solver_probabilities) const {
     std::vector<std::vector<int>> sample_sizes;
     min_sample_sizes(&sample_sizes);
@@ -95,9 +113,7 @@ class LineTriangulationEstimator {
       if (!solver_flags_[i])
         solver_probabilities->at(i) = 0.0;
       else {
-        solver_probabilities->at(i) =
-            combination(num_points_, sample_sizes[i][0]) *
-            combination(num_directions_, sample_sizes[i][1]);
+        solver_probabilities->at(i) = 1.0;
       }
     }
   }
