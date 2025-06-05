@@ -53,7 +53,7 @@ bash scripts_linemap/quickstart.sh
 ### 2. Line mapping
 To run line mapping (RGB-only) on scene *ai\_001\_001*:
 ```bash
-# note: joint optimization have been included
+# note: the joint optimization has been included
 output_dir=outputs/quickstart_triangulation
 python runners_linemap/hypersim/triangulation.py --output_dir ${output_dir}
 ```
